@@ -1,42 +1,31 @@
 pipeline {
-    agent any 
+    agent any
 
     stages {
         stage('Checkout SCM') {
             steps {
-                // Checkout the code from Git
                 checkout scm
             }
         }
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    // Any build commands you need
-                    echo 'Building the application...'
+                    // Build the Docker image
+                    sh 'docker build -t weather-app .'
                 }
             }
         }
-        stage('Test') {
+        stage('Run Docker Container') {
             steps {
                 script {
-                    // Add commands to run your tests
-                    echo 'Running tests...'
-                }
-            }
-        }
-        stage('Deploy') {
-            steps {
-                script {
-                    // Add commands to deploy your application
-                    echo 'Deploying the application...'
-                }
-            }
-        }
-    }
+                    // Stop and remove any existing container
+                    sh 'docker stop weather-app || true'
+                    sh 'docker rm weather-app || true'
 
-    post {
-        always {
-            echo 'Pipeline completed.'
+                    // Run the new container on port 3000
+                    sh 'docker run -d --name weather-app -p 3000:3000 weather-app'
+                }
+            }
         }
     }
 }
