@@ -1,39 +1,55 @@
 pipeline {
-    agent any 
+    agent any
+
+    environment {
+        DOCKER_IMAGE = 'weather-app'
+        PORT = '5000'
+    }
 
     stages {
         stage('Checkout SCM') {
             steps {
-                // Checkout the source code from the Git repository
-                git url: 'https://github.com/DivijaSistla/weather-app.git', branch: 'main'  // Adjust branch name if needed
+                // Checkout the code from GitHub
+                checkout scm
             }
         }
-        
+
         stage('Build Docker Image') {
             steps {
                 script {
                     // Build the Docker image
-                    sh 'docker build -t weather-app .'
+                    sh "docker build -t ${DOCKER_IMAGE} ."
                 }
             }
         }
-        
+
         stage('Run Docker Container') {
             steps {
                 script {
+                    // Stop and remove any existing container
+                    sh "docker stop ${DOCKER_IMAGE} || true"
+                    sh "docker rm ${DOCKER_IMAGE} || true"
+
                     // Run the Docker container
-                    sh 'docker run -d -p 8080:5000 weather-app'
+                    sh "docker run -d --name ${DOCKER_IMAGE} -p ${PORT}:${PORT} -e OPENWEATHER_API_KEY='YOUR_API_KEY' ${DOCKER_IMAGE}"
                 }
             }
         }
     }
 
     post {
+        always {
+            // Cleanup: Stop and remove the container if it exists
+            script {
+                sh "docker stop ${DOCKER_IMAGE} || true"
+                sh "docker rm ${DOCKER_IMAGE} || true"
+            }
+        }
         success {
-            echo 'Deployment successful!'
+            echo 'Deployment Successful!'
         }
         failure {
-            echo 'Deployment failed. Please check the logs for errors.'
+            echo 'Deployment Failed!'
         }
     }
 }
