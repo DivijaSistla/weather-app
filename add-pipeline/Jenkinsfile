@@ -4,16 +4,16 @@ pipeline {
     stages {
         stage('Checkout SCM') {
             steps {
-                // Checkout your code from Git
-                git 'https://github.com/DivijaSistla/weather-app.git'
+                // Checkout the source code from the Git repository
+                git url: 'https://github.com/DivijaSistla/weather-app.git', branch: 'main'  // Adjust branch name if needed
             }
         }
         
         stage('Build Docker Image') {
             steps {
-                // Build the Docker image
                 script {
-                    def dockerImage = docker.build("weather-app")
+                    // Build the Docker image
+                    sh 'docker build -t weather-app .'
                 }
             }
         }
@@ -21,11 +21,8 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
-                    // Remove any existing container with the same name
-                    sh 'docker rm -f weather-container || true'
-                    
                     // Run the Docker container
-                    sh 'docker run -d -p 5000:5000 --name weather-container weather-app'
+                    sh 'docker run -d -p 8080:5000 weather-app'
                 }
             }
         }
@@ -33,7 +30,7 @@ pipeline {
 
     post {
         success {
-            echo 'Deployment successful! You can access your app at http://<your-ec2-public-ip>:5000'
+            echo 'Deployment successful!'
         }
         failure {
             echo 'Deployment failed. Please check the logs for errors.'
