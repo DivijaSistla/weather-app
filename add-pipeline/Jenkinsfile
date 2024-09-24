@@ -30,8 +30,8 @@ pipeline {
                     sh "docker stop ${DOCKER_IMAGE} || true"
                     sh "docker rm ${DOCKER_IMAGE} || true"
 
-                    // Run the Docker container
-                    sh "docker run -d --name ${DOCKER_IMAGE} -p ${PORT}:${PORT} -e OPENWEATHER_API_KEY='YOUR_API_KEY' ${DOCKER_IMAGE}"
+                    // Run the Docker container on port 5000
+                    sh "docker run -d --name ${DOCKER_IMAGE} -p ${PORT}:${PORT} ${DOCKER_IMAGE}"
                 }
             }
         }
@@ -39,7 +39,7 @@ pipeline {
 
     post {
         always {
-            // Cleanup: Stop and remove the container if it exists
+            // Cleanup: Stop and remove the container if necessary
             script {
                 sh "docker stop ${DOCKER_IMAGE} || true"
                 sh "docker rm ${DOCKER_IMAGE} || true"
