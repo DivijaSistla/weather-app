@@ -3,13 +3,13 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'weather-app'
+        CONTAINER_NAME = 'weather-app-container'
         PORT = '5000'
     }
 
     stages {
         stage('Checkout SCM') {
             steps {
-                // Checkout the code from GitHub
                 checkout scm
             }
         }
@@ -27,11 +27,15 @@ pipeline {
             steps {
                 script {
                     // Stop and remove any existing container
-                    sh "docker stop ${DOCKER_IMAGE} || true"
-                    sh "docker rm ${DOCKER_IMAGE} || true"
-
+                    sh """
+                        if [ \$(docker ps -aq -f name=${CONTAINER_NAME}) ]; then
+                            docker stop ${CONTAINER_NAME}
+                            docker rm ${CONTAINER_NAME}
+                        fi
+                    """
+                    
                     // Run the Docker container on port 5000
-                    sh "docker run -d --name ${DOCKER_IMAGE} -p ${PORT}:${PORT} ${DOCKER_IMAGE}"
+                    sh "docker run -d --name ${CONTAINER_NAME} -p ${PORT}:${PORT} ${DOCKER_IMAGE}"
                 }
             }
         }
@@ -41,8 +45,12 @@ pipeline {
         always {
             // Cleanup: Stop and remove the container if necessary
             script {
-                sh "docker stop ${DOCKER_IMAGE} || true"
-                sh "docker rm ${DOCKER_IMAGE} || true"
+                sh """
+                    if [ \$(docker ps -aq -f name=${CONTAINER_NAME}) ]; then
+                        docker stop ${CONTAINER_NAME}
+                        docker rm ${CONTAINER_NAME}
+                    fi
+                """
             }
         }
         success {
