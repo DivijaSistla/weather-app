@@ -80,7 +80,7 @@
                 <p><strong>Temperature:</strong> {{ weather.main.temp }} °C</p>
                 <p><strong>Weather:</strong> {{ weather.weather[0].description }}</p>
                 <p><strong>Humidity:</strong> {{ weather.main.humidity }} %</p>
-                <p><strong>Precipitation:</strong> {{ weather.rain ? weather.rain['1h'] : 0 }} mm (last hour)</p>
+                <p><strong>Precipitation:</strong> {{ weather.rain['1h'] | default(0) }} mm (last hour)</p>
                 <p><strong>Good Time to Travel:</strong> {% if weather.main.temp > 20 and weather.main.humidity < 60 %} Yes {% else %} No {% endif %}</p>
             {% endif %}
         </div>
