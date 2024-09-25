@@ -5,7 +5,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Checkout the latest code from the repository
-                git 'https://github.com/DivijaSistla/weather-app.git'
+                git branch: 'main', 'https://github.com/DivijaSistla/weather-app.git'
             }
         }
 
