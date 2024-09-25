@@ -1,41 +1,40 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_IMAGE = 'weather-app'
-        CONTAINER_NAME = 'weather-app-container'
-        PORT = '5000'
-    }
-
     stages {
-        stage('Checkout SCM') {
+        stage('Checkout') {
             steps {
-                checkout scm
+                // Checkout the latest code from the repository
+                git 'https://your-repo-url.git'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build') {
             steps {
+                // Build the Docker image
                 script {
-                    // Build the Docker image
-                    sh "docker build -t ${DOCKER_IMAGE} ."
+                    dockerImage = docker.build("weather-app:latest")
                 }
             }
         }
 
-        stage('Run Docker Container') {
+        stage('Deploy') {
             steps {
                 script {
-                    // Stop and remove any existing container
-                    sh """
-                        if [ \$(docker ps -aq -f name=${CONTAINER_NAME}) ]; then
-                            docker stop ${CONTAINER_NAME}
-                            docker rm ${CONTAINER_NAME}
-                        fi
-                    """
-                    
-                    // Run the Docker container on port 5000
-                    sh "docker run -d --name ${CONTAINER_NAME} -p ${PORT}:${PORT} ${DOCKER_IMAGE}"
+                    // Define the container name
+                    def containerName = "weather-app-container"
+
+                    // Check if the container is running
+                    def runningContainer = sh(script: "docker ps -q -f name=${containerName}", returnStdout: true).trim()
+
+                    // Stop and remove the existing container if it exists
+                    if (runningContainer) {
+                        sh "docker stop ${runningContainer}"
+                        sh "docker rm ${runningContainer}"
+                    }
+
+                    // Run the new container
+                    sh "docker run -d --name ${containerName} -p 5000:5000 weather-app:latest"
                 }
             }
         }
@@ -43,21 +42,8 @@ pipeline {
 
     post {
         always {
-            // Cleanup: Stop and remove the container if necessary
-            script {
-                sh """
-                    if [ \$(docker ps -aq -f name=${CONTAINER_NAME}) ]; then
-                        docker stop ${CONTAINER_NAME}
-                        docker rm ${CONTAINER_NAME}
-                    fi
-                """
-            }
-        }
-        success {
-            echo 'Deployment Successful!'
-        }
-        failure {
-            echo 'Deployment Failed!'
+            // Clean up Docker images to save space (optional)
+            sh "docker image prune -f"
         }
     }
 }
