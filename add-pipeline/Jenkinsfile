@@ -18,26 +18,24 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
-            steps {
-                script {
-                    // Define the container name
-                    def containerName = "weather-app-container"
+       stage('Deploy') {
+    steps {
+        script {
+            def containerName = "weather-app-container"
+            def runningContainer = sh(script: "docker ps -q -f name=${containerName}", returnStdout: true).trim()
 
-                    // Check if the container is running
-                    def runningContainer = sh(script: "docker ps -q -f name=${containerName}", returnStdout: true).trim()
-
-                    // Stop and remove the existing container if it exists
-                    if (runningContainer) {
-                        sh "docker stop ${runningContainer}"
-                        sh "docker rm ${runningContainer}"
-                    }
-
-                    // Run the new container
-                    sh "docker run -d --name ${containerName} -p 5000:5000 weather-app:latest"
-                }
+            // Stop and remove the running container if it exists
+            if (runningContainer) {
+                sh "docker stop ${runningContainer}"
+                sh "docker rm ${runningContainer}"
             }
+
+            // Run a new container
+            sh "docker run -d --name ${containerName} -p 5000:5000 weather-app:latest"
         }
+    }
+}
+
     }
 
     post {
